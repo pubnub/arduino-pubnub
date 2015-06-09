@@ -1,0 +1,217 @@
+<html lang="en"><head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+  
+
+    <title>Arduino</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="blog.css" rel="stylesheet">
+
+   
+  <style type="text/css"></style><style id="holderjs-style" type="text/css"></style></head>
+
+  <body style="">
+
+    <div class="container">
+
+      <div class="blog-header">
+        <h1 class="blog-title">Arduino To PubNub In Two Steps</h1>
+       
+      </div>
+
+      <div class="row">
+
+        <div class="col-sm-8 blog-main">
+
+          <div class="blog-post">
+            <p class="blog-post-meta">June 23, 2014 by <a href="#">Bhavana</a></p>
+
+           
+            <p>The Arduino is a micro-controller and development environment that can be used, just like the Pi, to read information from
+            its sensors as well as to control other devices. Programming on the Arduino is extremely simple, and this has led to
+            its widespread use. Again, as with the Pi, it is a good starting place for experimenting with the world of Internet of Things.
+             
+            
+             
+             <p> This post walks you through the steps of connecting an Arduino to the PubNub network. This way you can now connect
+              with
+             a million other devices on this global network and start sending or receiving information to and from the Pi. 
+             <hr>
+             PubNub provides 
+             extensive documentation and support for the Arduino <a href = "http://www.pubnub.com/documentation/">here</a>.
+              </p> <br>
+
+        
+           
+            <h2>Basics of Connecting the Arduino to PubNub</h2>
+
+            <p>Follow these steps to get connected. </p>
+            <br>
+            
+            <p> <strong> STEP 1: </strong> Connect the Arduino to a monitor, keyboard, mouse and ethernet cable.
+            <br></br>
+            <p> <strong> STEP 2: </strong> Open a new window and paste the following code.
+            <pre><code>#include &ltSPI.h&gt
+#include &ltEthernet.h&gt
+#include "string.h"
+#include "iotconnector.h"
+
+byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
+
+char pubkey[] = "demo";char subkey[] = "demo";char channel[] = "iotchannel";char uuid[] = "Arduino";
+
+iotbridge arduino;
+
+void initialize(){
+        Serial.begin(9600);
+	Serial.println("Serial set up");
+
+	while (!Ethernet.begin(mac)) {
+		Serial.println("Ethernet setup error");
+		delay(1000);
+	}
+	Serial.println("Ethernet set up");
+}
+
+void do_something(String value){
+          Serial.println("in the callback");
+          Serial.println(value);
+        }
+void setup()
+{  
+	initialize();
+	<b>arduino.init( pubkey, subkey, uuid);     </b>  
+}
+
+void loop()
+{      
+        String returnmessage;
+	Ethernet.maintain();
+        
+        //Publish
+      <b>  arduino.send(channel,"\"Hey There\"");</b>
+
+        //Subscribe 
+       <b> returnmessage = arduino.connect(channel); </b>
+        
+        //callback function of sorts, to work with the received message
+       <b> do_something(returnmessage); </b>
+	Serial.println();
+}</code></pre>
+
+
+            <br>
+             <blockquote>
+              <p> The above code lets you set the following :
+              <ul>
+              	<li> publish key using "pubkey" </li>
+              	<li> subscribe key using "subkey" </li>
+              	<li> UUID using "uuid" </li>
+              	<li> channel you wish to subscribe and publish to using "channel"</li>
+              </ul>
+              
+              </p>
+            </blockquote> 
+            
+        <p> For all of you who are familiar with Arduino, you will notice that this is in fact only a few additional lines of code in
+ loop(). The remaining code sets up the Ethernet connection to the Arduino.   </p>
+              <p> The keys lines of code are just three lines:
+              <ul>
+              	<li> <b>arduino.init()</b> that lets you initialize variables </li>
+              	<li> <b>arduino.send()</b> that lets you send a message over the specified channel </li>
+              	<li> <b>arduino.connect() </b>that lets you subscribe to a channel to receive messages </li>
+              </ul>
+              
+            
+            </blockquote>We create an instance of the iotbridge called "arduino" and we can use the SEND and
+             CONNECT methods belonging to that
+            class.  
+            
+            <br></br>
+            <strong>SEND: </strong>This invokes the publish() API to send any message over a desired 
+			channel.</p>
+            <p><pre><code>bool iotbridge::send(const char *channel, const char *message){
+  EthernetClient *client;
+  client = PubNub.publish(channel,message);
+  return client;
+}</code></pre></p>    
+            <br></br>
+            
+        
+            <p><strong>CONNECT:</strong> This invokes the subscribe() API to listen for messages from other embedded devices
+             connected to the same channel.</p>
+             <p>
+            *** The call back function receive is invoked when subscribe runs. Connect() will block on subscribe, waiting 
+            for a message to be sent to the device. You can write your own simple task scheduler and bounce between tasks
+            according to their timing requirements.***
+             </p>
+			<pre><code>String iotbridge::connect(const char *channel){
+  PubSubClient *pclient = PubNub.subscribe(channel);</code></pre>
+    		<br><br>
+    		<p> You can customize the channels you publish/subscribe to, the UUID you assume and also the messages you 
+    		send by just changing the above fields. 
+    		<br>
+    	<p> <strong> huzzzaaaaah! </strong> 
+    	Thats it! You can now talk Arduino to any other device or application subscribing/publishing to the same channel.
+    	
+    	</p>
+            
+          </div><!-- /.blog-post -->
+
+        
+        </div><!-- /.blog-main -->
+
+        <div class="col-sm-3 col-sm-offset-1 blog-sidebar">
+          <div class="sidebar-module sidebar-module-inset">
+            <h3>PubNub</h3>
+            <p>The PubNub Realtime Network powers thousands of apps, streaming more than 3 million messages a second to over
+             200 million devices a month. 
+             <p><a class="btn btn-default" href="http://www.pubnub.com" role="button">View details »</a></p></p>
+          </div>
+          <div class="sidebar-module">
+            <h3>Related Blog Posts</h3>
+     <ul>
+      	
+              <li><a href = "http://www.pubnub.com/blog/raspberry-pi-to-pubnub-in-less-than-10-lines-of-code/">IoT Raspberry Pi connected to the Dashboard</a></li>
+              
+        </ul>
+          </div>
+          <div class="sidebar-module">
+            <h4>Elsewhere</h4>
+            <ol class="list-unstyled">
+              <li><a href="https://github.com/banasrini/ArduinoToPubNub">GitHub</a></li>
+              <li><a href="https://twitter.com/PubNub">Twitter</a></li>
+            </ol>
+          </div>
+        </div><!-- /.blog-sidebar -->
+
+      </div><!-- /.row -->
+
+    </div><!-- /.container -->
+
+    <div class="blog-footer">
+      
+      <p>
+        <a href="#">Back to top</a>
+      </p>
+    </div>
+    
+    
+
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    <script src="bootstrap.min.js"></script>
+  
+
+</body></html>
